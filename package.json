@@ -1,0 +1,38 @@
+{
+  "name": "@plaza/whatsapp-widget",
+  "version": "1.0.0",
+  "description": "Embeddable WhatsApp widget for customer websites",
+  "main": "dist/whatsapp-widget.min.js",
+  "scripts": {
+    "build": "npm run clean && npm run copy && npm run minify",
+    "clean": "rm -rf dist/*",
+    "copy": "cp src/whatsapp-widget.js dist/",
+    "minify": "terser src/whatsapp-widget.js --compress --mangle --output dist/whatsapp-widget.min.js",
+    "test": "node test/test.js",
+    "release": "npm run build && git add -A && git commit -m 'Build release' && npm version",
+    "deploy": "npm run build && git push && git push --tags"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/plazatechnologies/whatsapp-widget.git"
+  },
+  "keywords": [
+    "whatsapp",
+    "widget",
+    "chat",
+    "customer-support",
+    "real-estate"
+  ],
+  "author": "Plaza Team",
+  "license": "MIT",
+  "devDependencies": {
+    "terser": "^5.26.0"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "jsdelivr": "dist/whatsapp-widget.min.js",
+  "unpkg": "dist/whatsapp-widget.min.js"
+}
