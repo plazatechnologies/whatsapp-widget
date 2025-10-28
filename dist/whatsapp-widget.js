@@ -1,0 +1,283 @@
+/**
+ * WhatsApp Widget - Embeddable WhatsApp Button
+ *
+ * Usage:
+ * <script src="https://yourdomain.com/whatsapp-widget.js?phone=5511999999999&message=Hello"></script>
+ *
+ * Or with data attributes:
+ * <script src="https://yourdomain.com/whatsapp-widget.js"
+ *         data-whatsapp-phone="5511999999999"
+ *         data-whatsapp-message="Hello"></script>
+ */
+
+(function() {
+  'use strict';
+
+  // Prevent multiple initializations
+  if (window.__whatsappWidgetInitialized) {
+    return;
+  }
+  window.__whatsappWidgetInitialized = true;
+
+  // Get configuration from script tag
+  var currentScript = document.currentScript || (function() {
+    var scripts = document.getElementsByTagName('script');
+    return scripts[scripts.length - 1];
+  })();
+
+  // Parse configuration
+  var scriptSrc = currentScript.src || '';
+  var queryString = scriptSrc.split('?')[1] || '';
+  var urlParams = {};
+
+  // Parse URL parameters
+  if (queryString) {
+    queryString.split('&').forEach(function(param) {
+      var parts = param.split('=');
+      if (parts.length === 2) {
+        urlParams[decodeURIComponent(parts[0])] = decodeURIComponent(parts[1]);
+      }
+    });
+  }
+
+  // Configuration with fallbacks
+  var config = {
+    phone: urlParams.phone || currentScript.getAttribute('data-whatsapp-phone') || '',
+    message: urlParams.message || currentScript.getAttribute('data-whatsapp-message'),
+    position: urlParams.position || currentScript.getAttribute('data-whatsapp-position') || 'bottom-left',
+    tooltip: urlParams.tooltip || currentScript.getAttribute('data-whatsapp-tooltip') || 'Converse conosco no WhatsApp',
+    color: urlParams.color || currentScript.getAttribute('data-whatsapp-color') || '#25D366',
+    size: urlParams.size || currentScript.getAttribute('data-whatsapp-size') || '60'
+  };
+
+  // Validate required parameters
+  if (!config.phone) {
+    console.error('WhatsApp Widget Error: Phone number is required. Please provide it via URL parameter "phone" or data attribute "data-whatsapp-phone"');
+    return;
+  }
+
+  // Process message placeholders
+  function processMessage(message) {
+    var processed = message;
+    processed = processed.replace(/\{url\}/g, window.location.href);
+    processed = processed.replace(/\{title\}/g, document.title);
+    processed = processed.replace(/\{domain\}/g, window.location.hostname);
+    processed = processed.replace(/\{path\}/g, window.location.pathname);
+    return processed;
+  }
+
+  // Create WhatsApp button
+  function createButton() {
+    // Create button container
+    var button = document.createElement('a');
+    button.id = 'whatsapp-widget-button-' + Date.now();
+    button.className = 'whatsapp-widget-button';
+
+    // Build WhatsApp URL
+    var processedMessage = processMessage(config.message);
+    var encodedMessage = encodeURIComponent(processedMessage);
+    var cleanPhone = config.phone.replace(/[^\d]/g, ''); // Remove non-digits
+    button.href = 'https://wa.me/' + cleanPhone + '?text=' + encodedMessage;
+    button.target = '_blank';
+    button.rel = 'noopener noreferrer';
+
+    // Add WhatsApp SVG icon
+    button.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512" width="' + (config.size * 0.5) + '" height="' + (config.size * 0.5) + '">' +
+      '<path fill="currentColor" d="M380.9 97.1C339 55.1 283.2 32 223.9 32c-122.4 0-222 99.6-222 222 0 39.1 10.2 77.3 29.6 111L0 480l117.7-30.9c32.4 17.7 68.9 27 106.1 27h.1c122.3 0 224.1-99.6 224.1-222 0-59.3-25.2-115-67.1-157zm-157 341.6c-33.2 0-65.7-8.9-94-25.7l-6.7-4-69.8 18.3L72 359.2l-4.4-7c-18.5-29.4-28.2-63.3-28.2-98.2 0-101.7 82.8-184.5 184.6-184.5 49.3 0 95.6 19.2 130.4 54.1 34.8 34.9 56.2 81.2 56.1 130.5 0 101.8-84.9 184.6-186.6 184.6zm101.2-138.2c-5.5-2.8-32.8-16.2-37.9-18-5.1-1.9-8.8-2.8-12.5 2.8-3.7 5.6-14.3 18-17.6 21.8-3.2 3.7-6.5 4.2-12 1.4-32.6-16.3-54-29.1-75.5-66-5.7-9.8 5.7-9.1 16.3-30.3 1.8-3.7.9-6.9-.5-9.7-1.4-2.8-12.5-30.1-17.1-41.2-4.5-10.8-9.1-9.3-12.5-9.5-3.2-.2-6.9-.2-10.6-.2-3.7 0-9.7 1.4-14.8 6.9-5.1 5.6-19.4 19-19.4 46.3 0 27.3 19.9 53.7 22.6 57.4 2.8 3.7 39.1 59.7 94.8 83.8 35.2 15.2 49 16.5 66.6 13.9 10.7-1.6 32.8-13.4 37.4-26.4 4.6-13 4.6-24.1 3.2-26.4-1.3-2.5-5-3.9-10.5-6.6z"/>' +
+      '</svg>';
+
+    // Position styles based on configuration
+    var positionStyles = {};
+    switch(config.position) {
+      case 'bottom-right':
+        positionStyles.bottom = '20px';
+        positionStyles.right = '20px';
+        break;
+      case 'bottom-left':
+      default:
+        positionStyles.bottom = '20px';
+        positionStyles.left = '20px';
+        break;
+      case 'top-right':
+        positionStyles.top = '20px';
+        positionStyles.right = '20px';
+        break;
+      case 'top-left':
+        positionStyles.top = '20px';
+        positionStyles.left = '20px';
+        break;
+    }
+
+    // Apply inline styles
+    var buttonStyles = {
+      'position': 'fixed',
+      'width': config.size + 'px',
+      'height': config.size + 'px',
+      'background-color': config.color,
+      'border-radius': '50%',
+      'display': 'flex',
+      'align-items': 'center',
+      'justify-content': 'center',
+      'box-shadow': '0 4px 12px rgba(0, 0, 0, 0.15)',
+      'z-index': '9999',
+      'transition': 'all 0.3s ease',
+      'text-decoration': 'none',
+      'color': 'white',
+      'cursor': 'pointer',
+      '-webkit-tap-highlight-color': 'transparent'
+    };
+
+    // Merge position styles
+    for (var key in positionStyles) {
+      buttonStyles[key] = positionStyles[key];
+    }
+
+    // Apply styles
+    for (var style in buttonStyles) {
+      button.style[style.replace(/-([a-z])/g, function(g) { return g[1].toUpperCase(); })] = buttonStyles[style];
+    }
+
+    // Create tooltip element
+    var tooltip = null;
+
+    function showTooltip() {
+      if (tooltip) return;
+
+      tooltip = document.createElement('div');
+      tooltip.className = 'whatsapp-widget-tooltip';
+      tooltip.textContent = config.tooltip;
+
+      // Tooltip styles
+      var tooltipStyles = {
+        'position': 'fixed',
+        'background-color': '#333',
+        'color': 'white',
+        'padding': '8px 12px',
+        'border-radius': '6px',
+        'font-size': '14px',
+        'white-space': 'nowrap',
+        'z-index': '10000',
+        'opacity': '0',
+        'transition': 'opacity 0.3s ease',
+        'pointer-events': 'none',
+        'font-family': '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
+        'box-shadow': '0 2px 8px rgba(0, 0, 0, 0.2)'
+      };
+
+      // Position tooltip relative to button
+      if (config.position === 'bottom-left') {
+        tooltipStyles.bottom = '90px';
+        tooltipStyles.left = '20px';
+      } else if (config.position === 'bottom-right') {
+        tooltipStyles.bottom = '90px';
+        tooltipStyles.right = '20px';
+      } else if (config.position === 'top-left') {
+        tooltipStyles.top = '90px';
+        tooltipStyles.left = '20px';
+      } else if (config.position === 'top-right') {
+        tooltipStyles.top = '90px';
+        tooltipStyles.right = '20px';
+      }
+
+      // Apply tooltip styles
+      for (var style in tooltipStyles) {
+        tooltip.style[style.replace(/-([a-z])/g, function(g) { return g[1].toUpperCase(); })] = tooltipStyles[style];
+      }
+
+      document.body.appendChild(tooltip);
+
+      // Trigger reflow and show tooltip
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.style.opacity = '0.95';
+        }
+      }, 10);
+    }
+
+    function hideTooltip() {
+      if (!tooltip) return;
+
+      tooltip.style.opacity = '0';
+      setTimeout(function() {
+        if (tooltip && tooltip.parentNode) {
+          tooltip.parentNode.removeChild(tooltip);
+        }
+        tooltip = null;
+      }, 300);
+    }
+
+    // Add hover effects for desktop
+    if (!('ontouchstart' in window)) {
+      button.addEventListener('mouseenter', function() {
+        button.style.transform = 'scale(1.1)';
+        button.style.boxShadow = '0 6px 20px rgba(0, 0, 0, 0.25)';
+        showTooltip();
+      });
+
+      button.addEventListener('mouseleave', function() {
+        button.style.transform = 'scale(1)';
+        button.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.15)';
+        hideTooltip();
+      });
+    }
+
+    // Add touch feedback for mobile
+    button.addEventListener('touchstart', function() {
+      button.style.transform = 'scale(0.95)';
+    });
+
+    button.addEventListener('touchend', function() {
+      button.style.transform = 'scale(1)';
+    });
+
+    // Pulse animation on load
+    setTimeout(function() {
+      button.style.animation = 'whatsapp-widget-pulse 2s ease-in-out';
+    }, 1000);
+
+    return button;
+  }
+
+  // Add keyframe animations
+  function addAnimations() {
+    if (document.getElementById('whatsapp-widget-styles')) {
+      return;
+    }
+
+    var style = document.createElement('style');
+    style.id = 'whatsapp-widget-styles';
+    style.textContent =
+      '@keyframes whatsapp-widget-pulse {' +
+      '  0% { box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15); }' +
+      '  50% { box-shadow: 0 4px 20px rgba(37, 211, 102, 0.4); }' +
+      '  100% { box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15); }' +
+      '}' +
+      '@media (max-width: 768px) {' +
+      '  .whatsapp-widget-button { width: 50px !important; height: 50px !important; }' +
+      '  .whatsapp-widget-button svg { width: 25px !important; height: 25px !important; }' +
+      '}';
+
+    document.head.appendChild(style);
+  }
+
+  // Initialize widget
+  function init() {
+    // Add animations
+    addAnimations();
+
+    // Create and add button
+    var button = createButton();
+    document.body.appendChild(button);
+
+    // Log successful initialization
+    console.log('WhatsApp Widget initialized successfully');
+  }
+
+  // Wait for DOM to be ready
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+  } else {
+    // DOM is already ready
+    init();
+  }
+})();
