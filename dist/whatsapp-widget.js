@@ -30,12 +30,28 @@
   var queryString = scriptSrc.split('?')[1] || '';
   var urlParams = {};
 
+  // Brazilian-proof decode function that handles both UTF-8 and Latin-1
+  function safeDecode(str) {
+    if (!str) return '';
+
+    try {
+      // Try UTF-8 first - works for modern systems
+      return decodeURIComponent(str);
+    } catch (e) {
+      // Latin-1 fallback - handles legacy Brazilian systems
+      // This handles Portuguese characters like á, é, í, ó, ú, ã, õ, ç
+      return str.replace(/%([0-9A-Fa-f]{2})/g, function(match, hex) {
+        return String.fromCharCode(parseInt(hex, 16));
+      });
+    }
+  }
+
   // Parse URL parameters
   if (queryString) {
     queryString.split('&').forEach(function(param) {
       var parts = param.split('=');
       if (parts.length === 2) {
-        urlParams[decodeURIComponent(parts[0])] = decodeURIComponent(parts[1]);
+        urlParams[safeDecode(parts[0])] = safeDecode(parts[1]);
       }
     });
   }
