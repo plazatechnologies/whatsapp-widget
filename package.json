@@ -4,10 +4,10 @@
   "description": "Embeddable WhatsApp widget for customer websites",
   "main": "dist/whatsapp-widget.min.js",
   "scripts": {
-    "build": "npm run clean && npm run copy && npm run minify",
+    "build": "npm run clean && npm run concat && npm run minify",
     "clean": "rm -rf dist/*",
-    "copy": "cp src/whatsapp-widget.js dist/",
-    "minify": "terser src/whatsapp-widget.js --compress --mangle --output dist/whatsapp-widget.min.js",
+    "concat": "cat src/_open.js src/utils.js src/tracking.js src/config.js src/message.js src/ui-tooltip.js src/ui-button.js src/ui-animations.js src/init.js src/_close.js > dist/whatsapp-widget.js",
+    "minify": "terser dist/whatsapp-widget.js --compress --mangle --output dist/whatsapp-widget.min.js",
     "test": "node test/test.js",
     "release": "npm run build && git add -A && git commit -m 'Build release' && npm version",
     "deploy": "npm run build && git push && git push --tags"
